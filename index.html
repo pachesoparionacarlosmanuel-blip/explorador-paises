@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Explorador de Países</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header__title">
+      <h1>🌍 Explorador de Países</h1>
+      <p>Busca países, revisa sus datos y consulta el clima de su capital.</p>
+    </div>
+
+    <form id="api-key-form" class="api-key-form" title="API key de OpenWeatherMap para mostrar el clima">
+      <label for="api-key-input">API key clima</label>
+      <input
+        type="text"
+        id="api-key-input"
+        placeholder="Tu API key de OpenWeatherMap"
+        autocomplete="off"
+      />
+      <button type="submit">Guardar</button>
+    </form>
+  </header>
+
+  <main class="app-main">
+    <section class="controls-section">
+      <input
+        type="search"
+        id="search-input"
+        class="search-input"
+        placeholder="Buscar país por nombre..."
+        aria-label="Buscar país por nombre"
+      />
+
+      <select id="region-filter" class="region-filter" aria-label="Filtrar por región">
+        <option value="">Todas las regiones</option>
+      </select>
+
+      <select id="sort-by" class="sort-select" aria-label="Ordenar por">
+        <option value="name">Nombre</option>
+        <option value="population">Población</option>
+        <option value="area">Superficie</option>
+      </select>
+
+      <button type="button" id="sort-direction" class="sort-direction-btn" aria-pressed="false">
+        ↑ Ascendente
+      </button>
+
+      <label class="favorites-toggle">
+        <input type="checkbox" id="favorites-toggle" />
+        Solo favoritos
+      </label>
+    </section>
+
+    <div id="stats-bar" class="stats-bar"></div>
+
+    <p id="loading-indicator" class="loading-indicator" hidden>Cargando…</p>
+    <p id="error-box" class="error-box" hidden></p>
+
+    <section id="countries-grid" class="countries-grid"></section>
+
+    <nav id="pagination" class="pagination" aria-label="Paginación"></nav>
+
+    <section class="favorites-weather-section">
+      <h2>Clima de tus favoritos</h2>
+      <div id="favorites-weather-grid" class="favorites-weather-grid"></div>
+    </section>
+
+    <section class="comparator-section">
+      <h2>Comparador de países <span class="comparator-hint">(máx. 3)</span></h2>
+      <p id="compare-message" class="compare-message" hidden></p>
+      <div id="compare-grid" class="compare-grid"></div>
+    </section>
+  </main>
+
+  <div id="country-modal" class="modal" hidden>
+    <div class="modal__panel">
+      <button id="country-modal-close" class="modal__close" aria-label="Cerrar">✕</button>
+      <div id="country-modal-body"></div>
+    </div>
+  </div>
+
+  <script type="module" src="src/js/app.js"></script>
+</body>
+</html>
