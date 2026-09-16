@@ -41,11 +41,18 @@ Sin API key, la app funciona igual, solo que no se muestra el clima.
 | Dato | Fuente |
 | --- | --- |
 | Países (nombre, capital, región, superficie, población, banderas, idiomas, monedas, coordenadas) | [RestCountries v3.1](https://restcountries.com) — `https://restcountries.com/v3.1/all`, tal como pide el enunciado. |
+| Países (respaldo, sin conexión) | `src/data/countries-fallback.json` — dataset local con los mismos campos, embebido en el proyecto. |
 | Clima | [OpenWeatherMap](https://openweathermap.org/api) — requiere API key propia del usuario. |
 
-`countriesApi.js` hace **un solo fetch** al iniciar: primero intenta `https://restcountries.com/v3.1/all` y, si falla, reintenta con la URL de respaldo del propio enunciado (`.../all?fields=name,flags,capital,population,cca3`, que no trae `region` ni `area`). Si ambas fallan, se lanza un error y la app queda en el estado de error (sin datos), sin ninguna fuente alternativa silenciosa — así se decidió deliberadamente, para ajustarse de forma literal al enunciado.
+`countriesApi.js` hace **un solo fetch** al iniciar, con hasta tres intentos en cascada:
 
-> **⚠️ Estado conocido de la API (verificado en vivo, no algo que dependa del código):** al momento de escribir esto, **ambas URLs de RestCountries devuelven un error de deprecación** — responden HTTP 200 pero con el cuerpo `{"success": false, "errors": [{"message": "This API version has been deprecated..."}]}` en vez de un array de países. Se confirmó con `curl` directo contra el servidor, no es un problema de CORS ni de este proyecto. Su reemplazo (`api.restcountries.com`, v5) exige una API key de pago. Mientras esa situación no cambie, la app mostrará el estado de error al cargar y no tendrá países para mostrar; en cuanto RestCountries vuelva a responder con datos, funcionará sin cambiar nada de código.
+1. `https://restcountries.com/v3.1/all` (URL principal).
+2. Si falla, la URL de respaldo del propio enunciado: `.../all?fields=name,flags,capital,population,cca3` (no trae `region` ni `area`).
+3. Si también falla, se usa el dataset local `src/data/countries-fallback.json` como último recurso, para que la app funcione igual aunque RestCountries no responda.
+
+Solo si los tres intentos fallan se lanza un error y la app queda en el estado de error (sin datos).
+
+> **⚠️ Estado conocido de la API (verificado en vivo, no algo que dependa del código):** al momento de escribir esto, **ambas URLs de RestCountries devuelven un error de deprecación** — responden HTTP 200 pero con el cuerpo `{"success": false, "errors": [{"message": "This API version has been deprecated..."}]}` en vez de un array de países. Se confirmó con `curl` directo contra el servidor, no es un problema de CORS ni de este proyecto. Su reemplazo (`api.restcountries.com`, v5) exige una API key de pago. Por eso se agregó el dataset local de respaldo: mientras RestCountries siga deprecada, la app carga esos datos y funciona con normalidad (búsqueda, filtros, orden, favoritos, comparador); en cuanto RestCountries vuelva a responder, se usará de nuevo como fuente principal sin cambiar nada de código.
 
 ## Estructura del proyecto
 
@@ -53,21 +60,24 @@ Sin API key, la app funciona igual, solo que no se muestra el clima.
 explorador-paises/
 ├── index.html                 # Estructura de la interfaz
 ├── assets/css/styles.css      # Estilos visuales
-└── src/js/
-    ├── app.js                 # Coordina toda la aplicación (eventos, pipeline, render)
-    ├── state.js                # Estado global de la app (patrón pub-sub simple)
-    ├── api/
-    │   ├── countriesApi.js     # Obtiene y normaliza la lista de países (una sola vez)
-    │   └── weatherApi.js       # Clima individual y fetchWeatherForCountries (Promise.all)
-    ├── services/
-    │   ├── storageService.js   # localStorage: favoritos (con spread) y API key
-    │   └── statsService.js     # Estadísticas (reduce, Math.max + find, some, every)
-    ├── components/
-    │   ├── cardComponent.js        # Tarjetas de país + botones de favorito y comparar (map + join)
-    │   ├── statsComponent.js       # Renderiza la barra de estadísticas
-    │   └── paginationComponent.js  # Pagina (slice) y renderiza controles (sin bucles for)
-    └── utils/
-        └── helpers.js          # debounce, formatNumber, sortCountries (sort + reverse)
+└── src/
+    ├── data/
+    │   └── countries-fallback.json  # Dataset local de respaldo (si RestCountries no responde)
+    └── js/
+        ├── app.js                 # Coordina toda la aplicación (eventos, pipeline, render)
+        ├── state.js                # Estado global de la app (patrón pub-sub simple)
+        ├── api/
+        │   ├── countriesApi.js     # Obtiene y normaliza la lista de países (una sola vez, con fallback local)
+        │   └── weatherApi.js       # Clima individual y fetchWeatherForCountries (Promise.all)
+        ├── services/
+        │   ├── storageService.js   # localStorage: favoritos (con spread) y API key
+        │   └── statsService.js     # Estadísticas (reduce, Math.max + find, some, every)
+        ├── components/
+        │   ├── cardComponent.js        # Tarjetas de país + botones de favorito y comparar (map + join)
+        │   ├── statsComponent.js       # Renderiza la barra de estadísticas
+        │   └── paginationComponent.js  # Pagina (slice) y renderiza controles (sin bucles for)
+        └── utils/
+            └── helpers.js          # debounce, formatNumber, sortCountries (sort + reverse)
 ```
 
 ## Flujo de la aplicación
